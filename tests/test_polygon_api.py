@@ -17,13 +17,14 @@ class TestPolygonAPI(unittest.TestCase):
         self.api = PolygonAPI(self.__class__.api_key)
 
     def test_get_stock_data(self):
-        data, status_code = self.api.get_stock_data('AAPL', '2023-01-09', '2023-01-09')
+        data, status_code = self.api.get_stock_data('AAPL', '2023-01-09', '2023-01-10')
 
         # Check that the response code is 200 (OK)
         self.assertEqual(status_code, 200, "Expected response code to be 200 OK")
 
         # Check that 'results' is in the response data
         self.assertIn('results', data, "Expected 'results' to be in the API response")
+        print(data)
         
         # Ensure that the results are a list and contain at least one result
         self.assertIsInstance(data['results'], list, "Expected 'results' to be a list")
