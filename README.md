@@ -82,7 +82,7 @@ This project implements the Iron Condor trading strategy using the Polygon API t
       "stock_prices_pkey" PRIMARY KEY, btree (id)
       "idx_ticker_date" btree (ticker, date)
       "stock_prices_ticker_date_key" UNIQUE CONSTRAINT, btree (ticker, date)
-```
+   ```
 
 ## Project Milestones
 1. Set up back-end.
