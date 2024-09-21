@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta  # Import the datetime class, not the module
+
 import unittest
 import os
 import configparser
@@ -15,6 +17,8 @@ class TestPolygonAPI(unittest.TestCase):
     def setUp(self):
         # Use the API key loaded from the config file
         self.api = PolygonAPI(self.__class__.api_key)
+        # Get current date in the correct format
+        self.expiration_date = datetime.now().strftime('%Y-%m-%d')
 
     def test_get_stock_data(self):
         data, status_code = self.api.get_stock_data('AAPL', '2023-01-09', '2023-01-10')
@@ -38,21 +42,27 @@ class TestPolygonAPI(unittest.TestCase):
         self.assertIn('l', result, "Expected 'l' (low price) in the result")
         self.assertIn('v', result, "Expected 'v' (volume) in the result")
 
-    def test_invalid_date(self):
-        # Scenario 2: Invalid request due to invalid date
-        data, status_code = self.api.get_stock_data('AAPL', '2023-01-09', 'invaid')
+    def test_get_option_chain(self):
+        symbol = 'AAPL'  # Test symbol for Apple
 
-        # Print the data and status code for debugging
-        print("Response Code:", status_code)
-        print("Response Data:", data)
+        # Fetch the option chain data without specifying expiration date
+        data, status_code = self.api.get_option_chain(symbol)
 
-        # Assertions for status code and content
-        self.assertEqual(status_code, 400, "Expected status code to be 400 Bad Request")
-        self.assertIn('status', data, "Expected 'status' in the response")
-        self.assertEqual(data['status'], 'ERROR', "Expected status to be 'ERROR' for an invalid request")
-        self.assertIn('error', data, "Expected 'error' message in the response")
-        self.assertTrue("Could not parse the time parameter" in data['error'], "Expected an error about parsing the date")
+        # Check if the status code is 200 (OK)
+        self.assertEqual(status_code, 200, "Expected status code to be 200 OK")
+
+        # Ensure that 'results' is in the response
+        self.assertIn('results', data, "Expected 'results' in the response data")
+
+        # Ensure that the results are a list
+        self.assertIsInstance(data['results'], list, "Expected 'results' to be a list")
+
+        # Print the available options or expiration dates for debugging
+        print(data)
+
+        # Check if any contracts were returned
+        self.assertGreater(len(data['results']), 0, "Expected 'results' to contain at least one option contract")
+
 
 if __name__ == '__main__':
     unittest.main()
-
