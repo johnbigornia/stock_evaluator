@@ -1,8 +1,7 @@
-from datetime import datetime, timedelta  # Import the datetime class, not the module
-
 import unittest
 import os
 import configparser
+from datetime import datetime
 from src.api.polygon_api import PolygonAPI
 
 class TestPolygonAPI(unittest.TestCase):
@@ -15,33 +14,28 @@ class TestPolygonAPI(unittest.TestCase):
         cls.api_key = config.get('DEFAULT', 'POLYGON_API_KEY')
 
     def setUp(self):
-        # Use the API key loaded from the config file
+        # Initialize the API with the loaded API key
         self.api = PolygonAPI(self.__class__.api_key)
-        # Get current date in the correct format
-        self.expiration_date = datetime.now().strftime('%Y-%m-%d')
 
     def test_get_stock_data(self):
+        # Fetch stock data for a known date range
         data, status_code = self.api.get_stock_data('AAPL', '2023-01-09', '2023-01-10')
 
         # Check that the response code is 200 (OK)
         self.assertEqual(status_code, 200, "Expected response code to be 200 OK")
 
-        # Check that 'results' is in the response data
-        self.assertIn('results', data, "Expected 'results' to be in the API response")
-        print(data)
-        
-        # Ensure that the results are a list and contain at least one result
-        self.assertIsInstance(data['results'], list, "Expected 'results' to be a list")
-        self.assertGreater(len(data['results']), 0, "Expected 'results' to contain at least one entry")
-        
-        # Check the structure of the first entry in the 'results' list
-        result = data['results'][0]
-        self.assertIn('o', result, "Expected 'o' (open price) in the result")
-        self.assertIn('c', result, "Expected 'c' (close price) in the result")
-        self.assertIn('h', result, "Expected 'h' (high price) in the result")
-        self.assertIn('l', result, "Expected 'l' (low price) in the result")
-        self.assertIn('v', result, "Expected 'v' (volume) in the result")
+        # Check that data is not None
+        self.assertIsNotNone(data, "Expected data not to be None")
 
+        # Ensure that data is a list and contains at least one result
+        self.assertIsInstance(data, list, "Expected data to be a list")
+        self.assertGreater(len(data), 0, "Expected data to contain at least one entry")
+
+        # Check the structure of the first entry in the data list
+        result = data[0]
+        expected_keys = {'o', 'c', 'h', 'l', 'v', 't', 'n', 'vw'}
+        self.assertTrue(expected_keys.issubset(result.keys()), f"Expected keys {expected_keys} in the result")
+    
     def test_get_option_chain(self):
         symbol = 'AAPL'  # Test symbol for Apple
 
@@ -51,18 +45,24 @@ class TestPolygonAPI(unittest.TestCase):
         # Check if the status code is 200 (OK)
         self.assertEqual(status_code, 200, "Expected status code to be 200 OK")
 
-        # Ensure that 'results' is in the response
-        self.assertIn('results', data, "Expected 'results' in the response data")
+        # Check that data is not None
+        self.assertIsNotNone(data, "Expected data not to be None")
 
-        # Ensure that the results are a list
-        self.assertIsInstance(data['results'], list, "Expected 'results' to be a list")
-
-        # Print the available options or expiration dates for debugging
-        print(data)
+        # Ensure that data is a list
+        self.assertIsInstance(data, list, "Expected data to be a list")
 
         # Check if any contracts were returned
-        self.assertGreater(len(data['results']), 0, "Expected 'results' to contain at least one option contract")
+        self.assertGreater(len(data), 0, "Expected data to contain at least one option contract")
+
+        # Check the structure of the first contract
+        contract = data[0]
+        print("Contract keys:", contract.keys())
+
+        # Update expected keys
+        expected_keys = {'contract_type', 'strike_price', 'expiration_date', 'underlying_ticker'}
+        self.assertTrue(expected_keys.issubset(contract.keys()), f"Expected keys {expected_keys} in the contract")
 
 
 if __name__ == '__main__':
     unittest.main()
+
